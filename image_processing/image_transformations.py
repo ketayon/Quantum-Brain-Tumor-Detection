@@ -5,9 +5,11 @@ def apply_grayscale(image):
     """Convert an image to grayscale."""
     return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
+
 def apply_gaussian_blur(image, kernel_size=(5,5)):
     """Apply Gaussian Blur to an image."""
     return cv2.GaussianBlur(image, kernel_size, 0)
+
 
 def apply_histogram_equalization(image):
     """Apply histogram equalization to enhance contrast."""

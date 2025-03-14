@@ -22,9 +22,6 @@ for folder in [dataset_path_tumor, dataset_path_normal]:
         os.remove(ds_store_path)
         log.info(f"Removed .DS_Store from {folder}")
 
-# # Allow user input for image size
-# img_width = int(input("Enter image width: "))
-# img_height = int(input("Enter image height: "))
 img_size = (256, 256)
 
 

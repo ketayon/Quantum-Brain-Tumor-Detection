@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 import numpy as np
 import torch
 import pandas as pd
@@ -18,7 +19,6 @@ from image_processing.data_loader import y_train, y_test, dataset_path_tumor, da
 from quantum_classification.kernel_learning import ansatz
 from workflow.workflow_manager import WorkflowManager
 
-import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

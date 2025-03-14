@@ -109,9 +109,7 @@ docker run --env-file .env -p 5000:5000 quantum-brain-tumor
 
 ### **Run PyTests**
 ```bash
-pytest -v --disable-warnings tests/test_images.py
-pytest -v --disable-warnings tests/test_quantum.py
-pytest -v --disable-warnings tests/test_workflow.py
+pytest tests/
 ```
 
 ---
