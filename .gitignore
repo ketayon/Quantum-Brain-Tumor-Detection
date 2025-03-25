@@ -35,4 +35,3 @@ build/
 # Data
 tests/mock_dataset/
 interfaces/web_app/static/
-models/
