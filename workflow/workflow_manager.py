@@ -9,7 +9,12 @@ from qiskit_machine_learning.algorithms import PegasosQSVC
 from quantum_classification.quantum_model import pegasos_svc, train_and_save_qsvc
 from workflow.job_scheduler import JobScheduler
 # from quantum_classification.quantum_circuit import build_ansatz, calculate_total_params
+from quantum_classification.quantum_async_jobs import (
+    submit_quantum_job,
+    check_quantum_job
+)
 from quantum_classification.quantum_estimation import predict_with_expectation
+
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -80,9 +85,29 @@ class WorkflowManager:
     @staticmethod
     def classify_with_quantum_circuit(image_features):
         """
-        Classify MRI image using quantum circuit expectation value.
+        Classify MRI image using quantum circuit expectation value (blocking).
+        Used for CLI or internal validation, not for web UX.
         """
-        log.info("Running expectation-based classification...")
+        log.info("Running expectation-based classification (sync)...")
         prediction = predict_with_expectation(image_features)
         log.info(f"Quantum Estimation Prediction: {prediction}")
         return prediction
+
+    @staticmethod
+    def submit_quantum_job_async(image_features):
+        """
+        Submit a quantum job to IBM Quantum backend (non-blocking).
+        Used for web async behavior.
+        Returns: job_id (str)
+        """
+        log.info("Submitting async quantum job to IBM Quantum...")
+        return submit_quantum_job(image_features)
+
+    @staticmethod
+    def check_quantum_job_result(job_id):
+        """
+        Poll the quantum job result.
+        Returns: dict with keys: status, prediction, expectation_value (if complete)
+        """
+        log.info(f"Checking status of job: {job_id}")
+        return check_quantum_job(job_id)

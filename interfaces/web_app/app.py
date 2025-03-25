@@ -29,6 +29,7 @@ from image_processing.data_loader import (
     y_train, y_test,
     dataset_path_tumor, dataset_path_normal
 )
+from quantum_classification.quantum_async_jobs import submit_quantum_job, check_quantum_job
 from workflow.workflow_manager import WorkflowManager
 
 
@@ -236,6 +237,28 @@ def classify_uploaded_image():
     except Exception as e:
         log.exception("Image classification failed")
         return jsonify({"error": f"Invalid MRI image: {str(e)}"}), 400
+    
+
+@app.route("/quantum-job/submit", methods=["POST"])
+def quantum_job_submit():
+    try:
+        data = request.get_json()
+        features = np.array(data.get("features", []), dtype=np.float32)
+        job_id = submit_quantum_job(features)
+        return jsonify({"job_id": job_id, "message": "Quantum job submitted."})
+    except Exception as e:
+        log.exception("Error submitting quantum job")
+        return jsonify({"error": str(e)}), 400
+    
+
+@app.route("/quantum-job/status/<job_id>", methods=["GET"])
+def quantum_job_status(job_id):
+    try:
+        result = check_quantum_job(job_id)
+        return jsonify(result)
+    except Exception as e:
+        log.exception("Error checking quantum job")
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == "__main__":

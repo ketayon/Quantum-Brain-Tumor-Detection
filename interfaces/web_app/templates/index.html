@@ -76,12 +76,20 @@
       <p id="testScore">Test Accuracy: Loading...</p>
     </div>
 
-    <!-- Upload MRI Image for Classification -->
+    <!-- Immediate Classification -->
     <div class="box">
       <h3>Upload MRI Image for Quantum Classification</h3>
       <input type="file" id="uploadImage" accept="image/*" />
-      <button onclick="uploadAndClassifyImage()">🔬 Classify Uploaded MRI</button>
+      <button onclick="uploadAndClassifyImage()">🔬 Classify Now</button>
       <div id="uploadResult" class="prediction-result">Waiting for image...</div>
+    </div>
+
+    <!-- Async IBM Quantum Job -->
+    <div class="box">
+      <h3>Run on IBM Quantum (Async)</h3>
+      <input type="file" id="asyncUploadImage" accept="image/*" />
+      <button onclick="submitQuantumJob()">📡 Submit to IBM Quantum</button>
+      <div id="jobStatus" class="prediction-result">Awaiting upload...</div>
     </div>
   </div>
 
@@ -125,7 +133,7 @@
         document.getElementById("testScore").innerText = "Test Accuracy: " + data.test_score;
       });
 
-    // Upload MRI image and classify
+    // Immediate (simulated or noise-aware) classification
     function uploadAndClassifyImage() {
       const input = document.getElementById("uploadImage");
       const resultBox = document.getElementById("uploadResult");
@@ -156,6 +164,66 @@
         console.error("Upload error:", err);
         resultBox.innerText = "❌ Upload failed.";
       });
+    }
+
+    // Submit job to IBM Quantum (async)
+    function submitQuantumJob() {
+      const input = document.getElementById("asyncUploadImage");
+      const resultBox = document.getElementById("jobStatus");
+      const file = input.files[0];
+
+      if (!file) {
+        resultBox.innerText = "⚠️ Please select an MRI image.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("image", file);
+      resultBox.innerText = "📡 Submitting to IBM Quantum...";
+
+      fetch("/classify-image", {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.job_id) {
+          resultBox.innerText = `📨 Job ID: ${data.job_id} — waiting for result...`;
+          pollQuantumJob(data.job_id, resultBox);
+        } else if (data.quantum_prediction) {
+          resultBox.innerText = `🧠 Prediction: ${data.quantum_prediction}`;
+        } else {
+          resultBox.innerText = `❌ ${data.error}`;
+        }
+      })
+      .catch(err => {
+        console.error("Quantum job submit failed:", err);
+        resultBox.innerText = "❌ Upload or job submission failed.";
+      });
+    }
+
+    function pollQuantumJob(jobId, resultBox) {
+      let attempts = 0;
+      const interval = setInterval(() => {
+        fetch(`/quantum-job/status/${jobId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === "complete") {
+              clearInterval(interval);
+              resultBox.innerText = `✅ Quantum Result: ${data.prediction} (Value: ${data.expectation_value})`;
+            } else if (data.status === "error") {
+              clearInterval(interval);
+              resultBox.innerText = `❌ ${data.message}`;
+            } else {
+              resultBox.innerText = `⏳ IBM Quantum processing (attempt ${++attempts})...`;
+            }
+          })
+          .catch(err => {
+            clearInterval(interval);
+            console.error("Polling error:", err);
+            resultBox.innerText = "❌ Failed to check job status.";
+          });
+      }, 10000); // 10s polling
     }
   </script>
 </body>
