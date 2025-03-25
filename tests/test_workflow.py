@@ -1,54 +1,91 @@
-import pytest
+import os
+import sys
 import numpy as np
-from unittest.mock import MagicMock, patch
-from workflow.job_scheduler import JobScheduler
+import pytest
+from unittest.mock import patch
+from qiskit.circuit import QuantumCircuit
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from workflow.workflow_manager import WorkflowManager
-from quantum_classification.quantum_model import pegasos_svc
-from image_processing.data_loader import y_train, y_test
-from image_processing.dimensionality_reduction import X_train_reduced, X_test_reduced
+from workflow.job_scheduler import JobScheduler
 
-@pytest.fixture
-def job_scheduler():
-    """Fixture for JobScheduler instance."""
-    return JobScheduler(max_workers=2)
+valid_features = np.linspace(0, np.pi, 54)  # 18 qubits x 3 layers
+invalid_features = np.linspace(0, np.pi, 20)  # invalid input length
 
-@pytest.fixture
-def mock_workflow_manager():
-    """Fixture for WorkflowManager with mocked components."""
-    with patch("workflow.workflow_manager.JobScheduler") as mock_scheduler:
-        mock_instance = mock_scheduler.return_value
-        workflow = WorkflowManager()
-        workflow.job_scheduler = mock_instance  # Mock scheduler to avoid real execution
-        return workflow
+# -----------------------------
+# JobScheduler Tests
+# -----------------------------
 
-def test_schedule_task(job_scheduler):
-    """Test scheduling a simple task."""
-    def sample_task(x):
-        return x * 2
+def test_scheduler_executes_task():
+    scheduler = JobScheduler(max_workers=1)
+    result = scheduler.schedule_task(lambda x: x + 5, 7)
+    assert result == 12
 
-    result = job_scheduler.schedule_task(sample_task, 5)
-    assert result == 10, "JobScheduler did not return expected task result"
+# -----------------------------
+# Quantum Circuit
+# -----------------------------
 
-def test_workflow_training(mock_workflow_manager):
-    """Test quantum model training using JobScheduler."""
-    mock_workflow_manager.train_quantum_model()
-    mock_workflow_manager.job_scheduler.schedule_task.assert_called_once()
+def test_create_quantum_circuit():
+    circuit = WorkflowManager.create_quantum_circuit([np.pi / 2] * 5)
+    assert isinstance(circuit, QuantumCircuit)
+    assert circuit.num_qubits == 5
+    assert any(instr[0].name == "ry" for instr in circuit.data)
 
-def test_workflow_inference(mock_workflow_manager):
-    """Test MRI classification inference with mock data."""
-    sample_mri_data = np.random.rand(1, X_train_reduced.shape[1])
-    mock_workflow_manager.classify_mri_images = MagicMock(return_value=np.array([1]))
+def test_run_quantum_classification_returns_counts():
+    circuit = WorkflowManager.create_quantum_circuit([0.5] * 3)
+    counts = WorkflowManager.run_quantum_classification(circuit)
+    assert isinstance(counts, dict)
+    assert sum(counts.values()) == 1024
 
-    result = mock_workflow_manager.classify_mri_images(sample_mri_data)
-    assert result == np.array([1]), "Inference did not return expected classification result"
+# -----------------------------
+# Interpretation
+# -----------------------------
 
-def test_quantum_model_classification():
-    """Test PegasosQSVC model classification accuracy."""
-    train_score = pegasos_svc.score(X_train_reduced[:10], y_train[:10])
-    test_score = pegasos_svc.score(X_test_reduced[:10], y_test[:10])
+def test_interpret_counts_detected():
+    counts = {'100': 800, '000': 224}
+    result = WorkflowManager._interpret_quantum_counts(counts)
+    assert result == "Tumor Detected"
 
-    assert 0 <= train_score <= 1, "Invalid train score range"
-    assert 0 <= test_score <= 1, "Invalid test score range"
+def test_interpret_counts_not_detected():
+    counts = {'000': 900, '100': 124}
+    result = WorkflowManager._interpret_quantum_counts(counts)
+    assert result == "No Tumor Detected"
+
+def test_interpret_invalid_counts():
+    with pytest.raises(ValueError, match="Empty counts from quantum simulation."):
+        WorkflowManager._interpret_quantum_counts({})
+
+# -----------------------------
+# Quantum Classification
+# -----------------------------
+
+def test_classify_with_quantum_circuit():
+    manager = WorkflowManager()
+    result = manager.classify_with_quantum_circuit([np.pi / 4] * 6)
+    assert result in ["Tumor Detected", "No Tumor Detected"]
+
+@patch("workflow.workflow_manager.apply_noise_mitigation", return_value=None)
+def test_classify_with_quantum_circuit_noise_valid(mock_noise_model):
+    manager = WorkflowManager()
+    result = manager.classify_with_quantum_circuit_noise(valid_features)
+    assert result in ["Tumor Detected", "No Tumor Detected"]
+
+def test_classify_with_quantum_circuit_noise_invalid():
+    with pytest.raises(ValueError, match="Expected .* features"):
+        WorkflowManager.classify_with_quantum_circuit_noise(invalid_features)
+
+# -----------------------------
+# Training Pipeline
+# -----------------------------
+
+@patch("workflow.workflow_manager.train_and_save_qsvc", return_value=0.85)
+def test_training_pipeline_executes(mock_train):
+    manager = WorkflowManager()
+    manager._execute_training()
+    assert hasattr(manager, "model")
+    assert manager.model is not None
+
 
 if __name__ == "__main__":
     pytest.main()

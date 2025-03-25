@@ -1,122 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum AI Brain Tumor Detection</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; }
-        h1 { color: #333; }
-        .container { width: 90%; max-width: 1200px; margin: auto; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .box { background: white; padding: 15px; border-radius: 8px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }
-        img { max-width: 100%; border-radius: 5px; }
-        canvas { max-width: 100%; }
-        p { font-size: 16px; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quantum AI Brain Tumor Detection</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; text-align: center; }
+    h1, h2, h3 { color: #333; }
+    .container { width: 90%; max-width: 1200px; margin: auto; padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .box {
+      background: white; padding: 15px; border-radius: 8px;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    }
+    img, canvas { max-width: 100%; border-radius: 5px; }
+    p { font-size: 16px; font-weight: bold; }
+    input, button {
+      padding: 10px; border-radius: 5px; border: 1px solid #ccc;
+      font-size: 14px; margin: 5px;
+    }
+    .prediction-result {
+      font-size: 18px;
+      font-weight: bold;
+      color: #00796b;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Quantum AI Brain Tumor Detection</h1>
 
-    <div class="container">
-        <h1>Quantum AI Brain Tumor Detection</h1>
-
-        <!-- Dataset Statistics -->
-        <div class="box">
-            <h2>Dataset Statistics</h2>
-            <p id="tumorCount">Tumor Images: Loading...</p>
-            <p id="normalCount">Normal Images: Loading...</p>
-        </div>
-
-        <!-- MRI Image Display -->
-        <div class="grid">
-            <div class="box">
-                <h3>Original MRI Image</h3>
-                <img id="mriGray" src="" alt="Gray MRI Image">
-            </div>
-            <div class="box">
-                <h3>Color Transformed MRI</h3>
-                <img id="mriColored" src="" alt="Colored MRI Image">
-            </div>
-        </div>
-
-        <!-- PCA Dataset Visualization -->
-        <div class="box">
-            <h3>PCA Dataset Visualization</h3>
-            <img id="pcaPlot" src="" alt="PCA Visualization">
-        </div>
-
-        <!-- Quantum Circuit Visualization -->
-        <div class="box">
-            <h3>Quantum Circuit Used</h3>
-            <img id="quantumCircuit" src="" alt="Quantum Circuit">
-        </div>
-
-        <!-- Prediction Probability Distribution -->
-        <div class="box">
-            <h3>Predicted Probability Distribution</h3>
-            <img id="predictedProbs" src="" alt="Predicted Probability Histogram">
-        </div>
-
-        <!-- Confusion Matrix -->
-        <div class="box">
-            <h3>Confusion Matrix</h3>
-            <img id="confMatrix" src="" alt="Confusion Matrix">
-        </div>
-
-        <!-- Classification Score -->
-        <div class="box">
-            <h3>Model Performance</h3>
-            <p id="trainScore">Train Accuracy: Loading...</p>
-            <p id="testScore">Test Accuracy: Loading...</p>
-        </div>
+    <!-- Dataset Statistics -->
+    <div class="box">
+      <h2>Dataset Statistics</h2>
+      <p id="tumorCount">Tumor Images: Loading...</p>
+      <p id="normalCount">Normal Images: Loading...</p>
     </div>
 
-    <script>
-        // Fetch dataset statistics
-        fetch("/dataset-info")
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("tumorCount").innerText = "Tumor Images: " + data.tumor_count;
-                document.getElementById("normalCount").innerText = "Normal Images: " + data.normal_count;
-            });
+    <!-- MRI Image Display -->
+    <div class="grid">
+      <div class="box">
+        <h3>Original MRI Image</h3>
+        <img id="mriGray" src="" alt="Gray MRI Image" />
+      </div>
+      <div class="box">
+        <h3>Color Transformed MRI</h3>
+        <img id="mriColored" src="" alt="Colored MRI Image" />
+      </div>
+    </div>
 
-        // Fetch and display MRI images
-        fetch("/mri-image")
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("mriGray").src = data.gray_image;
-                document.getElementById("mriColored").src = data.colored_image;
-            });
+    <!-- PCA Dataset Visualization -->
+    <div class="box">
+      <h3>PCA Dataset Visualization</h3>
+      <img id="pcaPlot" src="" alt="PCA Visualization" />
+    </div>
 
-        // Fetch PCA plot
-        fetch("/pca-plot")
-            .then(response => response.json())
-            .then(data => document.getElementById("pcaPlot").src = data.pca_plot);
+    <!-- Predicted Probability Distribution -->
+    <div class="box">
+      <h3>Predicted Probability Distribution</h3>
+      <img id="predictedProbs" src="" alt="Predicted Histogram" />
+    </div>
 
-        // Fetch Quantum Circuit image
-        fetch("/quantum-circuit")
-            .then(response => response.json())
-            .then(data => document.getElementById("quantumCircuit").src = data.circuit_image);
+    <!-- Confusion Matrix -->
+    <div class="box">
+      <h3>Confusion Matrix</h3>
+      <img id="confMatrix" src="" alt="Confusion Matrix" />
+    </div>
 
-        // Fetch Predicted Probability Distribution
-        fetch("/predict-probabilities")
-            .then(response => response.json())
-            .then(data => document.getElementById("predictedProbs").src = data.predicted_probs_plot);
+    <!-- Classification Score -->
+    <div class="box">
+      <h3>Model Performance</h3>
+      <p id="trainScore">Train Accuracy: Loading...</p>
+      <p id="testScore">Test Accuracy: Loading...</p>
+    </div>
 
-        // Fetch Confusion Matrix
-        fetch("/confusion-matrix")
-            .then(response => response.json())
-            .then(data => document.getElementById("confMatrix").src = data.conf_matrix_plot);
+    <!-- Upload MRI Image for Classification -->
+    <div class="box">
+      <h3>Upload MRI Image for Quantum Classification</h3>
+      <input type="file" id="uploadImage" accept="image/*" />
+      <button onclick="uploadAndClassifyImage()">🔬 Classify Uploaded MRI</button>
+      <div id="uploadResult" class="prediction-result">Waiting for image...</div>
+    </div>
+  </div>
 
-        // Fetch Classification Scores
-        fetch("/classification-score")
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("trainScore").innerText = "Train Accuracy: " + data.train_score;
-                document.getElementById("testScore").innerText = "Test Accuracy: " + data.test_score;
-            });
-    </script>
+  <script>
+    // Dataset stats
+    fetch("/dataset-info")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("tumorCount").innerText = "Tumor Images: " + data.tumor_count;
+        document.getElementById("normalCount").innerText = "Normal Images: " + data.normal_count;
+      });
 
+    // MRI Image
+    fetch("/mri-image")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("mriGray").src = data.gray_image;
+        document.getElementById("mriColored").src = data.colored_image;
+      });
+
+    // PCA
+    fetch("/pca-plot")
+      .then(res => res.json())
+      .then(data => document.getElementById("pcaPlot").src = data.pca_plot);
+
+    // Probability
+    fetch("/predict-probabilities")
+      .then(res => res.json())
+      .then(data => document.getElementById("predictedProbs").src = data.predicted_probs_plot);
+
+    // Confusion Matrix
+    fetch("/confusion-matrix")
+      .then(res => res.json())
+      .then(data => document.getElementById("confMatrix").src = data.conf_matrix_plot);
+
+    // Scores
+    fetch("/classification-score")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("trainScore").innerText = "Train Accuracy: " + data.train_score;
+        document.getElementById("testScore").innerText = "Test Accuracy: " + data.test_score;
+      });
+
+    // Upload MRI image and classify
+    function uploadAndClassifyImage() {
+      const input = document.getElementById("uploadImage");
+      const resultBox = document.getElementById("uploadResult");
+      const file = input.files[0];
+
+      if (!file) {
+        resultBox.innerText = "⚠️ Please select an MRI image.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("image", file);
+      resultBox.innerText = "🔄 Analyzing MRI...";
+
+      fetch("/classify-image", {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.quantum_prediction) {
+          resultBox.innerText = `🧠 Quantum Prediction: ${data.quantum_prediction}`;
+        } else {
+          resultBox.innerText = `❌ Error: ${data.error}`;
+        }
+      })
+      .catch(err => {
+        console.error("Upload error:", err);
+        resultBox.innerText = "❌ Upload failed.";
+      });
+    }
+  </script>
 </body>
 </html>

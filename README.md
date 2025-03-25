@@ -2,45 +2,48 @@
 
 This project is an **end-to-end solution** that integrates **Quantum AI, Computer Vision, and Hybrid Quantum-Classical Models** to detect **brain tumors from MRI scans**. It leverages **Quantum Kernel Learning, Quantum Support Vector Classifiers (QSVC), and Neural Networks** for enhanced medical diagnosis.
 
+---
+
 ## 🚀 Features
 
-- **Real MRI Image Processing & Augmentation**
-- **Quantum-Classical Hybrid Computation**
-- **Automated Workflow & IBM Quantum Cloud Integration**
-- **Live Web UI for MRI Visualization & Prediction**
-- **CLI Support for Direct Model Execution**
-- **Dockerized for Seamless Deployment**
+- 🧠 **Real MRI Image Processing & Augmentation**
+- ⚛️ **Quantum-Classical Hybrid Computation**
+- ☁️ **IBM Quantum Cloud Integration**
+- 🖼️ **Web UI with Real-Time MRI Upload + Visualization**
+- 🧪 **CLI Support for Direct Model Execution**
+- 🐳 **Dockerized for Seamless Deployment**
 
 ---
 
-## 🏗 **Solution Architecture**
+## 🏗 Solution Architecture
 
-### 🔬 **End-to-End Processing Pipeline**
+### 🔬 End-to-End Processing Pipeline
+
 1. **MRI Preprocessing**  
-   - Load MRI images and enhance them with intensity scaling.
-   - Convert scans into optimal feature vectors for Quantum AI.
+   - Loads MRI images and applies grayscale & blur enhancements.  
+   - Reduces noise and standardizes shape for analysis.
 
 2. **Quantum Feature Extraction**  
-   - Reduces MRI data dimensionality using **PCA**.
-   - Encodes optimized data into **Quantum Kernel Circuits**.
+   - Applies custom reduction (or PCA) to condense features.  
+   - Scales and maps features to quantum rotation angles.
 
 3. **Quantum Model Training & Classification**  
-   - Uses **Quantum Support Vector Classifiers (QSVC)** trained on IBM Quantum Cloud.
-   - Hybrid **Quantum + Classical ML** improves tumor detection accuracy.
+   - Uses **Fidelity Quantum Kernels** via **QSVC**.  
+   - Trained on IBM Quantum backend, with simulation fallback.
 
-4. **Automated Workflow Execution**  
-   - **JobScheduler & WorkflowManager** distribute quantum-classical computations.
-   - IBM **Quantum Backend** executes feature processing.
+4. **Automated Execution**  
+   - Modular task management via `JobScheduler` + `WorkflowManager`.
 
-5. **Real-Time Visualization & Prediction**  
-   - Web UI provides live MRI scan visualization.
-   - Users can **upload images, analyze quantum predictions, and visualize tumor probabilities**.
+5. **Interactive Web Interface**  
+   - Upload your own MRI image and classify it live.  
+   - View PCA, predictions, histograms, confusion matrix & more.
 
 ---
 
-## 🏗 **Installation Guide**
+## 🛠️ Installation Guide
 
-### **1️⃣ Clone the Repository**
+### 1️⃣ Clone the Repository
+
 ```bash
 git clone https://github.com/your-repo/Quantum-Brain-Tumor-Detection
 cd Quantum-Brain-Tumor-Detection
@@ -64,7 +67,9 @@ pip install -r requirements.txt
 
 ### **1️⃣ CLI Mode**
 ```bash
+python interfaces/cli.py --dataset-info
 python interfaces/cli.py --model-score
+python interfaces/cli.py --predict
 ```
 ✅ **Output Example:**  
 `Quantum QSVC on the training dataset: 0.89`

@@ -31,3 +31,8 @@ build/
 *.env
 
 *.DS_Store
+
+# Data
+tests/mock_dataset/
+interfaces/web_app/static/
+models/

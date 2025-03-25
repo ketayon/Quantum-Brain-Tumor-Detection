@@ -1,4 +1,4 @@
-from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.circuit import QuantumCircuit
 
 
 def conv_layer(num_qubits, label, params):
