@@ -35,10 +35,19 @@ def view_dataset_info():
 
 def show_model_scores():
     """Evaluate model accuracy on train and test sets."""
+    try:
+        # Check if model is trained (fit) by attempting a small prediction
+        _ = pegasos_svc.predict(X_train_reduced[:1])
+    except Exception:
+        log.info("🔄 PegasosQSVC model not trained yet. Training now...")
+        from quantum_classification.quantum_model import train_and_save_qsvc
+        train_and_save_qsvc()
+
     train_score = pegasos_svc.score(X_train_reduced, y_train)
     test_score = pegasos_svc.score(X_test_reduced, y_test)
     log.info(f"🎯 Quantum QSVC Train Accuracy: {train_score:.2f}")
     log.info(f"🎯 Quantum QSVC Test Accuracy : {test_score:.2f}")
+
 
 
 def predict_sample():
