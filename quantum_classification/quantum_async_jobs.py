@@ -45,20 +45,41 @@ def submit_quantum_job(features):
     log.info(f"Submitted job: {job_id}")
     return job_id
 
+
 def check_quantum_job(job_id, threshold=0.00):
-    job = job_store.get(job_id)
-    if job is None:
-        return {"status": "error", "message": f"Job ID {job_id} not found"}
+    try:
+        job = job_store.get(job_id)
 
-    if not job.done():
-        return {"status": "pending", "message": "Job is still running..."}
+        if job is None:
+            job = service.job(job_id)
 
-    result = job.result()
-    value = float(result[0].data.evs)
-    prediction = "Tumor Detected" if value > threshold else "No Tumor Detected"
+        job_status = str(job.status())
 
-    return {
-        "status": "complete",
-        "expectation_value": round(value, 4),
-        "prediction": prediction
-    }
+        if "CANCELLED" in job_status.upper():
+            return {
+                "status": "error",
+                "message": "Job was canceled on IBM Quantum."
+            }
+
+        if "DONE" not in job_status.upper():
+            return {
+                "status": "pending",
+                "message": f"Job is still running... (Status: {job_status})"
+            }
+
+        result = job.result()
+        value = float(result[0].data.evs)
+
+        prediction = "Tumor Detected" if value >= threshold else "No Tumor Detected"
+
+        return {
+            "status": "complete",
+            "expectation_value": round(value, 4),
+            "prediction": prediction
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to retrieve job result: {str(e)}"
+        }

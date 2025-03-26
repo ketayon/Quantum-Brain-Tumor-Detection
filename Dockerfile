@@ -45,4 +45,4 @@ ENV PYTHONPATH="/app"
 EXPOSE 5000
 
 # Start Flask app using Gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "interfaces.web_app.app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "interfaces.web_app.app:app", "--timeout", "300", "--workers", "2"]

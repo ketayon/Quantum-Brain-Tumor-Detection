@@ -6,7 +6,6 @@ seaborn
 opencv-python
 pillow
 tensorflow
-kagglehub
 torch
 pytest
 qiskit

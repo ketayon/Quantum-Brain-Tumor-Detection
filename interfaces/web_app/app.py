@@ -281,7 +281,6 @@ def quantum_job_submit():
         return jsonify({"error": f"Image submission failed: {str(e)}"}), 400
 
     
-
 @app.route("/quantum-job/status/<job_id>", methods=["GET"])
 def quantum_job_status(job_id):
     try:
