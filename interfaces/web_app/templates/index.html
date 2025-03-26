@@ -94,7 +94,7 @@
   </div>
 
   <script>
-    // Dataset stats
+    // Load dataset info
     fetch("/dataset-info")
       .then(res => res.json())
       .then(data => {
@@ -102,7 +102,7 @@
         document.getElementById("normalCount").innerText = "Normal Images: " + data.normal_count;
       });
 
-    // MRI Image
+    // Load sample MRI image
     fetch("/mri-image")
       .then(res => res.json())
       .then(data => {
@@ -110,17 +110,17 @@
         document.getElementById("mriColored").src = data.colored_image;
       });
 
-    // PCA
+    // Load PCA
     fetch("/pca-plot")
       .then(res => res.json())
       .then(data => document.getElementById("pcaPlot").src = data.pca_plot);
 
-    // Probability
+    // Probability histogram
     fetch("/predict-probabilities")
       .then(res => res.json())
       .then(data => document.getElementById("predictedProbs").src = data.predicted_probs_plot);
 
-    // Confusion Matrix
+    // Confusion matrix
     fetch("/confusion-matrix")
       .then(res => res.json())
       .then(data => document.getElementById("confMatrix").src = data.conf_matrix_plot);
@@ -133,7 +133,7 @@
         document.getElementById("testScore").innerText = "Test Accuracy: " + data.test_score;
       });
 
-    // Immediate (simulated or noise-aware) classification
+    // Local classify (simulated)
     function uploadAndClassifyImage() {
       const input = document.getElementById("uploadImage");
       const resultBox = document.getElementById("uploadResult");
@@ -166,7 +166,7 @@
       });
     }
 
-    // Submit job to IBM Quantum (async)
+    // Submit image to IBM Quantum async job
     function submitQuantumJob() {
       const input = document.getElementById("asyncUploadImage");
       const resultBox = document.getElementById("jobStatus");
@@ -181,7 +181,8 @@
       formData.append("image", file);
       resultBox.innerText = "📡 Submitting to IBM Quantum...";
 
-      fetch("/classify-image", {
+      // Corrected endpoint for async submission
+      fetch("/quantum-job/submit", {
         method: "POST",
         body: formData
       })
@@ -190,8 +191,6 @@
         if (data.job_id) {
           resultBox.innerText = `📨 Job ID: ${data.job_id} — waiting for result...`;
           pollQuantumJob(data.job_id, resultBox);
-        } else if (data.quantum_prediction) {
-          resultBox.innerText = `🧠 Prediction: ${data.quantum_prediction}`;
         } else {
           resultBox.innerText = `❌ ${data.error}`;
         }
@@ -202,6 +201,7 @@
       });
     }
 
+    // Polling function for job status
     function pollQuantumJob(jobId, resultBox) {
       let attempts = 0;
       const interval = setInterval(() => {
@@ -223,7 +223,7 @@
             console.error("Polling error:", err);
             resultBox.innerText = "❌ Failed to check job status.";
           });
-      }, 10000); // 10s polling
+      }, 10000); // every 10s
     }
   </script>
 </body>

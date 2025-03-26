@@ -241,14 +241,45 @@ def classify_uploaded_image():
 
 @app.route("/quantum-job/submit", methods=["POST"])
 def quantum_job_submit():
+    if "image" not in request.files:
+        return jsonify({"error": "No image file provided"}), 400
+
+    image = request.files["image"]
+    if image.filename == "":
+        return jsonify({"error": "No selected image"}), 400
+
     try:
-        data = request.get_json()
-        features = np.array(data.get("features", []), dtype=np.float32)
+        temp_path = os.path.join(tempfile.gettempdir(), secure_filename(image.filename))
+        image.save(temp_path)
+
+        img = cv2.imread(temp_path)
+        if img is None:
+            raise ValueError("Invalid or unreadable MRI image.")
+
+        gray = apply_grayscale(img)
+        blurred = apply_gaussian_blur(gray)
+        resized = cv2.resize(blurred, (256, 256)).flatten().astype(np.float32)
+
+        if np.std(resized) < 1e-3:
+            raise ValueError("Uniform image — likely invalid.")
+
+        num_qubits, layers = 18, 3
+        total_params = num_qubits * layers
+
+        reduced = reduce_to_n_dimensions(resized.reshape(1, -1), num_qubits)
+        scaled = MinMaxScaler((0, np.pi)).fit_transform(reduced).flatten()
+        features = np.tile(scaled, layers)[:total_params]
+
+        if len(features) != total_params:
+            raise ValueError(f"Expected {total_params} features, got {len(features)}")
+
         job_id = submit_quantum_job(features)
         return jsonify({"job_id": job_id, "message": "Quantum job submitted."})
+
     except Exception as e:
         log.exception("Error submitting quantum job")
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": f"Image submission failed: {str(e)}"}), 400
+
     
 
 @app.route("/quantum-job/status/<job_id>", methods=["GET"])

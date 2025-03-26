@@ -45,7 +45,7 @@ def submit_quantum_job(features):
     log.info(f"Submitted job: {job_id}")
     return job_id
 
-def check_quantum_job(job_id, threshold=0.5):
+def check_quantum_job(job_id, threshold=0.00):
     job = job_store.get(job_id)
     if job is None:
         return {"status": "error", "message": f"Job ID {job_id} not found"}

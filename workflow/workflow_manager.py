@@ -1,14 +1,16 @@
 import os
 import logging
-# from qiskit import transpile
-# from qiskit.circuit import Parameter
-# from qiskit_aer import AerSimulator
+from collections import Counter
+from qiskit import transpile
+from qiskit.circuit import Parameter
+from qiskit_aer import AerSimulator
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_machine_learning.algorithms import PegasosQSVC
 
 from quantum_classification.quantum_model import pegasos_svc, train_and_save_qsvc
+from quantum_classification.noise_mitigation import apply_noise_mitigation
 from workflow.job_scheduler import JobScheduler
-# from quantum_classification.quantum_circuit import build_ansatz, calculate_total_params
+from quantum_classification.quantum_circuit import build_ansatz, calculate_total_params
 from quantum_classification.quantum_async_jobs import (
     submit_quantum_job,
     check_quantum_job
@@ -81,6 +83,54 @@ class WorkflowManager:
         log.info("Performing QSVC Classification...")
         prediction = self.model.predict(image_data)
         return prediction
+    
+    @staticmethod
+    def create_quantum_circuit(features):
+        num_qubits = len(features)
+        params = [Parameter(f"θ{i}") for i in range(num_qubits)]
+        circuit = build_ansatz(num_qubits, params)
+        param_dict = dict(zip(params, features))
+        qc = circuit.assign_parameters(param_dict)
+        qc.measure_all()
+        return qc
+
+    @staticmethod
+    def run_quantum_classification(qc):
+        simulator = AerSimulator()
+        transpiled_qc = transpile(qc, simulator)
+        result = simulator.run(transpiled_qc, shots=1024).result()
+        return result.get_counts()
+
+    @staticmethod
+    def _interpret_quantum_counts(counts):
+        if not counts:
+            raise ValueError("Empty counts from quantum simulation.")
+        most_common = Counter(counts).most_common(1)[0][0]
+        bit = int(most_common[::-1][0])
+        return "Tumor Detected" if bit else "No Tumor Detected"
+
+    @staticmethod
+    def classify_with_quantum_circuit_noise(image_features):
+        num_qubits = 18
+        layers = 3
+        total_params = num_qubits * layers
+
+        if len(image_features) != total_params:
+            raise ValueError(f"Expected {total_params} features, got {len(image_features)}")
+
+        params = [Parameter(f"θ{i}") for i in range(total_params)]
+        ansatz = build_ansatz(num_qubits, params)
+        param_dict = dict(zip(params, image_features))
+        qc = ansatz.assign_parameters(param_dict)
+        qc.measure_all()
+
+        noise_model = apply_noise_mitigation(backend)
+        simulator = AerSimulator(noise_model=noise_model)
+        transpiled = transpile(qc, simulator)
+        result = simulator.run(transpiled, shots=1024).result()
+        counts = result.get_counts()
+
+        return WorkflowManager._interpret_quantum_counts(counts)
 
     @staticmethod
     def classify_with_quantum_circuit(image_features):
