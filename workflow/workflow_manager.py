@@ -11,17 +11,14 @@ from quantum_classification.quantum_model import pegasos_svc, train_and_save_qsv
 from quantum_classification.noise_mitigation import apply_noise_mitigation
 from workflow.job_scheduler import JobScheduler
 from quantum_classification.quantum_circuit import build_ansatz, calculate_total_params
-from quantum_classification.quantum_async_jobs import (
-    submit_quantum_job,
-    check_quantum_job
-)
+from quantum_classification.quantum_async_jobs import submit_quantum_job, check_quantum_job
 from quantum_classification.quantum_estimation import predict_with_expectation
-
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-MODEL_PATH = "models/PegasosQSVC_Fidelity_quantm_trainer_brain.model"
+MODEL_DIR = "models"
+MODEL_PATH = os.path.join(MODEL_DIR, "PegasosQSVC_Fidelity_quantm_trainer_brain.model")
 
 token = os.getenv("QISKIT_IBM_TOKEN")
 if not token:
@@ -41,49 +38,57 @@ class WorkflowManager:
     def __init__(self):
         self.job_scheduler = JobScheduler()
         self.model = None
+
         log.info("Quantum Brain Tumor Workflow Initialized on Backend: %s", backend)
+        self._ensure_model_dir()
         self._load_or_train_model()
+
+    def _ensure_model_dir(self):
+        """Ensure the models directory exists, especially in Docker."""
+        if not os.path.exists(MODEL_DIR):
+            log.warning("Model directory not found. Creating: %s", MODEL_DIR)
+            os.makedirs(MODEL_DIR, exist_ok=True)
+
+        # Check if mounted volume exists
+        if not os.listdir(MODEL_DIR):
+            log.warning("Model directory is empty. If running Docker, mount a volume: -v $(pwd)/models:/app/models")
 
     def _load_or_train_model(self):
         """Load the trained model if it exists, otherwise train and save"""
         if os.path.exists(MODEL_PATH):
-            log.info("Loading pre-trained Quantum Brain Tumor Model...")
+            log.info("📦 Loading pre-trained Quantum Brain Tumor Model...")
             self.model = PegasosQSVC.load(MODEL_PATH)
-            log.info("Model loaded successfully.")
+            log.info("✅ Model loaded successfully.")
         else:
-            log.info("No pre-trained model found. Training a new model...")
+            log.info("⚠️ No pre-trained model found. Training a new model...")
             self.train_quantum_model()
-            log.info("Saving trained model...")
+            log.info("💾 Saving trained model to: %s", MODEL_PATH)
             pegasos_svc.save(MODEL_PATH)
             self.model = pegasos_svc
-            log.info("Model saved at: %s", MODEL_PATH)
+            log.info("✅ Model saved.")
 
     def train_quantum_model(self):
-        """Train the Quantum Model using Job Scheduler"""
-        log.info("Scheduling Quantum Model Training...")
+        log.info("🧠 Scheduling Quantum Model Training...")
         self.job_scheduler.schedule_task(self._execute_training)
 
     def _execute_training(self):
-        """Handles Quantum Training Execution"""
-        log.info("Executing Quantum Brain Tumor Model Training...")
+        log.info("🚀 Executing Quantum Brain Tumor Model Training...")
         accuracy = train_and_save_qsvc()
         self.model = pegasos_svc
-        log.info(f"Quantum Brain Tumor Model Training Completed. Accuracy: {accuracy}")
+        log.info(f"🎯 Training Complete. Accuracy: {accuracy}")
 
     def classify_brain_mri(self, image_data):
-        """Classify Brain MRI Images using the trained model"""
         if self.model is None:
-            log.error("No trained model found. Please train the model first.")
+            log.error("❌ No trained model found. Please train the model first.")
             return None
-        log.info("Scheduling QSVC-based classification...")
+        log.info("📊 Scheduling QSVC-based classification...")
         return self.job_scheduler.schedule_task(self._infer_brain_tumor, image_data)
 
     def _infer_brain_tumor(self, image_data):
-        """Infer using PegasosQSVC"""
-        log.info("Performing QSVC Classification...")
+        log.info("🔍 Performing QSVC Classification...")
         prediction = self.model.predict(image_data)
         return prediction
-    
+
     @staticmethod
     def create_quantum_circuit(features):
         num_qubits = len(features)
@@ -111,8 +116,7 @@ class WorkflowManager:
 
     @staticmethod
     def classify_with_quantum_circuit_noise(image_features):
-        num_qubits = 18
-        layers = 3
+        num_qubits, layers = 18, 3
         total_params = num_qubits * layers
 
         if len(image_features) != total_params:
@@ -120,8 +124,7 @@ class WorkflowManager:
 
         params = [Parameter(f"θ{i}") for i in range(total_params)]
         ansatz = build_ansatz(num_qubits, params)
-        param_dict = dict(zip(params, image_features))
-        qc = ansatz.assign_parameters(param_dict)
+        qc = ansatz.assign_parameters(dict(zip(params, image_features)))
         qc.measure_all()
 
         noise_model = apply_noise_mitigation(backend)
@@ -134,30 +137,17 @@ class WorkflowManager:
 
     @staticmethod
     def classify_with_quantum_circuit(image_features):
-        """
-        Classify MRI image using quantum circuit expectation value (blocking).
-        Used for CLI or internal validation, not for web UX.
-        """
-        log.info("Running expectation-based classification (sync)...")
+        log.info("🧪 Running synchronous expectation-based classification...")
         prediction = predict_with_expectation(image_features)
-        log.info(f"Quantum Estimation Prediction: {prediction}")
+        log.info(f"🔬 Quantum Estimation Prediction: {prediction}")
         return prediction
 
     @staticmethod
     def submit_quantum_job_async(image_features):
-        """
-        Submit a quantum job to IBM Quantum backend (non-blocking).
-        Used for web async behavior.
-        Returns: job_id (str)
-        """
-        log.info("Submitting async quantum job to IBM Quantum...")
+        log.info("📡 Submitting async quantum job to IBM Quantum...")
         return submit_quantum_job(image_features)
 
     @staticmethod
     def check_quantum_job_result(job_id):
-        """
-        Poll the quantum job result.
-        Returns: dict with keys: status, prediction, expectation_value (if complete)
-        """
-        log.info(f"Checking status of job: {job_id}")
+        log.info(f"🔁 Checking status of job: {job_id}")
         return check_quantum_job(job_id)
