@@ -1,6 +1,6 @@
 # 🧠 Quantum AI Brain Tumor Detection
 
-This project is an **end-to-end solution** that integrates **Quantum AI, Computer Vision, and Hybrid Quantum-Classical Models** to detect **brain tumors from MRI scans**. It leverages **Quantum Kernel Learning, Quantum Support Vector Classifiers (QSVC), and Neural Networks** for enhanced medical diagnosis.
+This project is an **end-to-end solution** that integrates **Quantum AI, Computer Vision, and Quantum Models** to detect **brain tumors from MRI scans**. It leverages **Quantum Support Vector Classifiers (QSVC), and Neural Networks** for enhanced medical diagnosis.
 
 ---
 
@@ -20,7 +20,7 @@ This project is an **end-to-end solution** that integrates **Quantum AI, Compute
 ### 🔬 End-to-End Processing Pipeline
 
 1. **MRI Preprocessing**  
-   - Loads MRI images and applies grayscale & blur enhancements.  
+   - Loads MRI images and applies grayscale & blur enhancements.
    - Reduces noise and standardizes shape for analysis.
 
 2. **Quantum Feature Extraction**  
@@ -35,7 +35,8 @@ This project is an **end-to-end solution** that integrates **Quantum AI, Compute
    - Modular task management via `JobScheduler` + `WorkflowManager`.
 
 5. **Interactive Web Interface**  
-   - Upload your own MRI image and classify it live.  
+   - Upload your own MRI image and classify it live (image size 256x256)
+   - If you have free IBM Quantum account then upload your image on `Run on IBM Quantum (Async)`
    - View PCA, predictions, histograms, confusion matrix & more.
 
 ---
