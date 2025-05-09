@@ -8,7 +8,7 @@ pillow
 tensorflow
 torch
 pytest
-qiskit
+qiskit==1.4.2
 qiskit-machine-learning
 qiskit-ibm-runtime
 qiskit_aer
